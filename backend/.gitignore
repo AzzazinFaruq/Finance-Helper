@@ -1,0 +1,4 @@
+# Go
+.env
+go.mod
+go.sum
