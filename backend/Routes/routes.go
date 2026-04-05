@@ -16,7 +16,7 @@ import (
 
 	app.Post("/register", userHandler.Register)
 	app.Post("/login", userHandler.Login)
-	app.Post("/add-category", categoryHandler.CreateCategory)
+	
 	
 	app.Get("/", fiber.Handler(func(c *fiber.Ctx) error {
 		return c.SendString("Backend")
@@ -24,6 +24,11 @@ import (
 
 	api := app.Group("/api")
 	api.Use(middleware.AuthMiddleware())
+
+	api.Post("/add-category", categoryHandler.CreateCategory)
+	api.Get("/get-category", categoryHandler.GetCategory)
+	api.Put("/update-category/:id", categoryHandler.UpdateCategory)
+	api.Delete("/delete-category/:id", categoryHandler.DeleteCategory)
 
 	api.Post("/logout", userHandler.Logout)
 	api.Get("/users", userHandler.GetCurrentUser)

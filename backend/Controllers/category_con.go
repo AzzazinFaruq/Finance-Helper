@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"simple_crud/Models"
-	// "strconv"
+	models "simple_crud/Models"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/uptrace/bun"
@@ -27,8 +27,8 @@ func (h *CategoryHandler) CreateCategory(c *fiber.Ctx) error {
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Input tidak valid"})
 	}
-category := &models.Category{
-		Name:    req.Name,
+	category := &models.Category{
+		Name:   req.Name,
 		UserID: req.UserID,
 	}
 
@@ -39,86 +39,89 @@ category := &models.Category{
 
 	return c.Status(201).JSON(fiber.Map{
 		"message": "Category Created Succesfully",
-		"data":   category,
+		"data":    category,
 	})
 }
 
-// func (h *CategoryHandler) GetClinic(c *fiber.Ctx) error {
-// 	var clinics []models.Clinic
+func (h *CategoryHandler) GetCategory(c *fiber.Ctx) error {
+	var categories []models.Category
 
-// 	err := h.DB.NewSelect().
-// 		Model(&clinics).
-// 		Order("id ASC").
-// 		Scan(c.Context())
+	err := h.DB.NewSelect().
+		Model(&categories).
+		Relation("User").
+		Scan(c.Context())
 
-// 	if err != nil {
-// 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-// 	}
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
-// 	return c.JSON(clinics)
-// }
+	if len(categories) == 0 {
+		return c.Status(200).JSON(fiber.Map{
+			"message": "Category not Found",
+		})
+	} else {
+		return c.Status(200).JSON(fiber.Map{
+			"message": "Category Found",
+			"data":    categories,
+		})
+	}
 
-// func (h *CategoryHandler) UpdateClinic(c *fiber.Ctx) error {
-// 	id, _ := strconv.ParseInt(c.Params("id"), 10, 64)
+}
 
-// 	// Gunakan struct input terpisah agar fleksibel
-// 	type UpdateUserRequest struct {
-// 		Name    string `json:"name"`
-// 		Address string `json:"address"`
-// 		Phone   string `json:"phone"`
-// 		Slug    string `json:"slug"`
-// 	}
+func (h *CategoryHandler) UpdateCategory(c *fiber.Ctx) error {
+	id, _ := strconv.ParseInt(c.Params("id"), 10, 64)
 
-// 	req := new(UpdateUserRequest)
-// 	if err := c.BodyParser(req); err != nil {
-// 		return c.Status(400).JSON(fiber.Map{"error": "Input salah"})
-// 	}
+	type UpdateUserRequest struct {
+		UserID int64  `json:"user_id"`
+		Name   string `json:"name"`
+	}
 
-// 	// Siapkan user model untuk update
-// 	clinic := &models.Clinic{
-// 		ID:      id,
-// 		Name:    req.Name,
-// 		Address: req.Address,
-// 		Phone:   req.Phone,
-// 		Slug:    req.Slug,
-// 	}
+	req := new(UpdateUserRequest)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Input salah"})
+	}
 
-// 	// Query Builder Update
-// 	q := h.DB.NewUpdate().
-// 		Model(clinic).
-// 		Column("name", "address", "phone", "slug").
-// 		Where("id = ?", id)
+	category := &models.Category{
+		Name:   req.Name,
+		UserID: req.UserID,
+	}
 
-// 	result, err := q.Exec(c.Context())
-// 	if err != nil {
-// 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-// 	}
+	// Query Builder Update
+	q := h.DB.NewUpdate().
+		Model(category).
+		Column("name", "user_id").
+		Where("id = ?", id)
 
-// 	// Cek apakah ada baris yang terupdate
-// 	rowsAffected, _ := result.RowsAffected()
-// 	if rowsAffected == 0 {
-// 		return c.Status(404).JSON(fiber.Map{"error": "Klinik tidak ditemukan atau akses ditolak"})
-// 	}
+	result, err := q.Exec(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
-// 	return c.JSON(fiber.Map{"message": "Klinik berhasil diupdate"})
-// }
+	// Cek apakah ada baris yang terupdate
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Category tidak ditemukan atau akses ditolak"})
+	}
 
-// func (h *CategoryHandler) DeleteClinic(c *fiber.Ctx) error {
-// 	id := c.Params("id")
+	return c.JSON(fiber.Map{"message": "Category berhasil diupdate"})
+}
 
-// 	result, err := h.DB.NewDelete().
-// 		Model((*models.Clinic)(nil)).
-// 		Where("id = ?", id).
-// 		Exec(c.Context())
+func (h *CategoryHandler) DeleteCategory(c *fiber.Ctx) error {
+	id := c.Params("id")
 
-// 	if err != nil {
-// 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-// 	}
+	result, err := h.DB.NewDelete().
+		Model((*models.Category)(nil)).
+		Where("id = ?", id).
+		Exec(c.Context())
 
-// 	rows, _ := result.RowsAffected()
-// 	if rows == 0 {
-// 		return c.Status(404).JSON(fiber.Map{"error": "Klinik tidak ditemukan"})
-// 	}
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
-// 	return c.JSON(fiber.Map{"message": "Klinik berhasil dihapus"})
-// }
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Category tidak ditemukan"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Category berhasil dihapus"})
+}
