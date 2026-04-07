@@ -2,7 +2,7 @@ package controllers
 
 import (
 	models "simple_crud/Models"
-	// "strconv"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -77,67 +77,79 @@ func (h *TransactionHandler) GetTransaction(c *fiber.Ctx) error {
 		})
 	} else {
 		return c.Status(200).JSON(fiber.Map{
-			"message": "Transaction Found",
 			"data":    transactions,
 		})
 	}
 
 }
 
-// func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
-// 	id, _ := strconv.ParseInt(c.Params("id"), 10, 64)
+func (h *TransactionHandler) UpdateTransaction(c *fiber.Ctx) error {
+	id, _ := strconv.ParseInt(c.Params("id"), 10, 64)
 
-// 	type UpdateUserRequest struct {
-// 		UserID int64  `json:"user_id"`
-// 		Name   string `json:"name"`
-// 	}
+	type UpdateTransactionRequest struct {
+		UserID      int64   `json:"user_id"`
+		Amount      float64 `json:"amount"`
+		Type        string  `json:"type"`
+		Date        string  `json:"date"` 
+		Description string  `json:"description"`
+		CategoryID  int64   `json:"category_id"`
+	}
 
-// 	req := new(UpdateUserRequest)
-// 	if err := c.BodyParser(req); err != nil {
-// 		return c.Status(400).JSON(fiber.Map{"error": "Input salah"})
-// 	}
+	req := new(UpdateTransactionRequest)
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Input salah"})
+	}
 
-// 	category := &models.Transaction{
-// 		Name:   req.Name,
-// 		UserID: req.UserID,
-// 	}
+	parsedDate, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Format tanggal salah, gunakan YYYY-MM-DD"})
+	}
 
-// 	// Query Builder Update
-// 	q := h.DB.NewUpdate().
-// 		Model(category).
-// 		Column("name", "user_id").
-// 		Where("id = ?", id)
+	category := &models.Transaction{
+		UserID:      req.UserID,
+		Amount:      req.Amount,
+		Type:        req.Type,
+		Date:        parsedDate,
+		Description: req.Description,
+		CategoryID:  req.CategoryID,
+	}
 
-// 	result, err := q.Exec(c.Context())
-// 	if err != nil {
-// 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-// 	}
+	// Query Builder Update
+	q := h.DB.NewUpdate().
+		Model(category).
+		Column("user_id", "amount", "type", "date", "description", "category_id").
+		Where("id = ?", id)
 
-// 	// Cek apakah ada baris yang terupdate
-// 	rowsAffected, _ := result.RowsAffected()
-// 	if rowsAffected == 0 {
-// 		return c.Status(404).JSON(fiber.Map{"error": "Category tidak ditemukan atau akses ditolak"})
-// 	}
+	result, err := q.Exec(c.Context())
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
-// 	return c.JSON(fiber.Map{"message": "Category berhasil diupdate"})
-// }
+	// Cek apakah ada baris yang terupdate
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Transaction tidak ditemukan atau akses ditolak"})
+	}
 
-// func (h *TransactionHandler) DeleteTransaction(c *fiber.Ctx) error {
-// 	id := c.Params("id")
+	return c.JSON(fiber.Map{"message": "Transaction berhasil diupdate"})
+}
 
-// 	result, err := h.DB.NewDelete().
-// 		Model((*models.Transaction)(nil)).
-// 		Where("id = ?", id).
-// 		Exec(c.Context())
+func (h *TransactionHandler) DeleteTransaction(c *fiber.Ctx) error {
+	id := c.Params("id")
 
-// 	if err != nil {
-// 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
-// 	}
+	result, err := h.DB.NewDelete().
+		Model((*models.Transaction)(nil)).
+		Where("id = ?", id).
+		Exec(c.Context())
 
-// 	rows, _ := result.RowsAffected()
-// 	if rows == 0 {
-// 		return c.Status(404).JSON(fiber.Map{"error": "Category tidak ditemukan"})
-// 	}
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
-// 	return c.JSON(fiber.Map{"message": "Category berhasil dihapus"})
-// }
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return c.Status(404).JSON(fiber.Map{"error": "Transaction tidak ditemukan"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Transaction berhasil dihapus"})
+}

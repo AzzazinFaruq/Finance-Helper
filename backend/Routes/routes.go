@@ -33,8 +33,8 @@ import (
 
 	api.Post("/add-transaction", transactionHandler.CreateTransaction)
 	api.Get("/get-transaction", transactionHandler.GetTransaction)
-	// api.Put("/update-transaction/:id", transactionHandler.UpdateTransaction)
-	// api.Delete("/delete-transaction/:id", transactionHandler.DeleteTransaction)
+	api.Put("/update-transaction/:id", transactionHandler.UpdateTransaction)
+	api.Delete("/delete-transaction/:id", transactionHandler.DeleteTransaction)
 
 	api.Post("/logout", userHandler.Logout)
 	api.Get("/users", userHandler.GetCurrentUser)
