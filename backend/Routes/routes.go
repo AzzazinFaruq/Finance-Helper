@@ -13,6 +13,7 @@ import (
 	userHandler := controllers.NewUserHandler(db)
 	categoryHandler := controllers.NewCategoryHandler(db)
 	transactionHandler := controllers.NewTransactionHandler(db)
+	budgetHandler := controllers.NewBudgetHandler(db)
 
 
 	app.Post("/register", userHandler.Register)
@@ -35,6 +36,11 @@ import (
 	api.Get("/get-transaction", transactionHandler.GetTransaction)
 	api.Put("/update-transaction/:id", transactionHandler.UpdateTransaction)
 	api.Delete("/delete-transaction/:id", transactionHandler.DeleteTransaction)
+
+	api.Post("/add-budget", budgetHandler.CreateBudget)
+	api.Get("/get-budget", budgetHandler.GetBudget)
+	api.Put("/update-budget/:id", budgetHandler.UpdateBudget)
+	api.Delete("/delete-budget/:id", budgetHandler.DeleteBudget)
 
 	api.Post("/logout", userHandler.Logout)
 	api.Get("/users", userHandler.GetCurrentUser)

@@ -15,9 +15,9 @@ func main() {
 	Setup.Migrate()
 
 	app := fiber.New()
-	routes.Setup(app, Setup.DB)
 	app.Use(middleware.CORSMiddleware())
 	app.Use(middleware.SecurityMiddleware())
+	routes.Setup(app, Setup.DB)
 
 	app.Listen(":" + config.Get("APP_PORT"))
 }
